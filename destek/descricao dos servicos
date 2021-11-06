@@ -1,0 +1,6 @@
+*Chamados(iticket) – Controle de chamados / DJANGO
+    -iticket-notification: notificação dos chamados /FastAPI
+*Chat – Chat interno e em grupos. /FastAPI
+*Chat online (livechat) – Chat com atendentes do suporte, deverá suportar upload de documentos. (o chat criará um chamado) /FastAPI
+*Documentação (wiki) – Documentação de processos, procedimentos resolução de problemas ( poderá ser referenciado em chamados) /Django
+*Controle de filas (visitqueue) – Controle de fila / Django
