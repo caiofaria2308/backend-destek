@@ -21,7 +21,7 @@ from .models import (
 )
 
 
-class SettingList(DefaultMixin, ListAPIView, viewsets.ModelViewSet):
+class SettingList(DefaultMixin, ListAPIView):
     filterset_fields = ['label']
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     queryset = Setting.objects.all()
@@ -97,7 +97,7 @@ class SettingViewSet(DefaultMixin, APIView):
             )
 
 
-class EquipmentList(DefaultMixin, ListAPIView, viewsets.ModelViewSet):
+class EquipmentList(DefaultMixin, ListAPIView):
     search_fields = ['$brand', '$model']
     filterset_fields = ['type']
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
@@ -174,7 +174,7 @@ class EquipmentViewSet(DefaultMixin, APIView):
             )
 
 
-class EquipmentTypeList(DefaultMixin, ListAPIView, viewsets.ModelViewSet):
+class EquipmentTypeList(DefaultMixin, ListAPIView):
     search_fields = ['$type']
     filter_backends = (filters.SearchFilter,)
     queryset = EquipmentType.objects.all()

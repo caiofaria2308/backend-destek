@@ -26,7 +26,7 @@ from .serializers import (
 )
 
 
-class ClientList(DefaultMixin, ListAPIView, viewsets.ModelViewSet, APIView):
+class ClientList(DefaultMixin, ListAPIView):
     queryset = Client.objects.all().order_by('is_active')
     serializer_class = ClientSerializer
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
@@ -37,6 +37,29 @@ class ClientList(DefaultMixin, ListAPIView, viewsets.ModelViewSet, APIView):
         '^secondary_document',
         '^reference_code'
     ]
+
+
+    def post(self, request, *args, **kwargs):
+        try:
+            obj = Client()
+            data = dict(request.data)
+            serializer = ClientSerializer(obj)
+            serializer.create(data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_201_CREATED
+                )
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class ClientViewSet(DefaultMixin, APIView):
@@ -110,7 +133,7 @@ class ClientViewSet(DefaultMixin, APIView):
             )
 
 
-class TelephoneList(DefaultMixin, ListAPIView, viewsets.ModelViewSet):
+class TelephoneList(DefaultMixin, ListAPIView):
     queryset = Telephone.objects.all().order_by('is_active')
     serializer_class = TelephoneSerializer
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
@@ -120,7 +143,20 @@ class TelephoneList(DefaultMixin, ListAPIView, viewsets.ModelViewSet):
     search_fields = [
         '$telephone'
     ]
-    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
+
+
+    def post(self, request, *args, **kwargs):
+        try:
+            data = dict(request.data)
+            obj = Telephone()
+            serializer = TelephoneSerializer(obj)
+            serializer.update(obj, data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class TelephoneViewSet(DefaultMixin, APIView):
@@ -194,9 +230,10 @@ class TelephoneViewSet(DefaultMixin, APIView):
             )
 
 
-class AddressList(DefaultMixin, ListAPIView, viewsets.ModelViewSet):
+class AddressList(DefaultMixin, ListAPIView):
     queryset = Address.objects.all().order_by('zip_code')
     serializer_class = AddressSerializer
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_fields = [
         'client'
     ]
@@ -205,6 +242,20 @@ class AddressList(DefaultMixin, ListAPIView, viewsets.ModelViewSet):
         '$address',
         '=city'
     ]
+
+
+    def post(self, request, *args, **kwargs):
+        try:
+            data = dict(request.data)
+            obj = Address()
+            serializer = AddressSerializer(obj)
+            serializer.update(obj, data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class AddressViewSet(DefaultMixin, APIView):
@@ -280,7 +331,7 @@ class AddressViewSet(DefaultMixin, APIView):
             )
 
 
-class ObservationList(DefaultMixin, ListAPIView, viewsets.ModelViewSet):
+class ObservationList(DefaultMixin, ListAPIView):
     queryset = Observation.objects.all().order_by('title')
     serializer_class = ObservationSerializer
     filterset_fields = [
@@ -290,6 +341,29 @@ class ObservationList(DefaultMixin, ListAPIView, viewsets.ModelViewSet):
         '$title',
         '$information'
     ]
+
+
+    def post(self, request, *args, **kwargs):
+        try:
+            obj = Observation()
+            data = dict(request.data)
+            serializer = ObservationSerializer(obj)
+            serializer.create(data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_201_CREATED
+                )
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class ObservationViewSet(DefaultMixin, APIView):
@@ -365,7 +439,7 @@ class ObservationViewSet(DefaultMixin, APIView):
             )
 
 
-class EquipmentList(DefaultMixin, ListAPIView, viewsets.ModelViewSet):
+class EquipmentList(DefaultMixin, ListAPIView):
     queryset = Equipment.objects.all().order_by('created_at')
     serializer_class = EquipmentSerializer
     filterset_fields = [
@@ -375,6 +449,20 @@ class EquipmentList(DefaultMixin, ListAPIView, viewsets.ModelViewSet):
     search_fields = [
         
     ]
+
+
+    def post(self, request, *args, **kwargs):
+        try:
+            data = dict(request.data)
+            obj = Equipment()
+            serializer = EquipmentSerializer(obj)
+            serializer.update(obj, data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class EquipmentViewSet(DefaultMixin, APIView):

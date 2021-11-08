@@ -22,22 +22,22 @@ class TelephoneSerializer(serializers.ModelSerializer):
 
 
 class AddressSerializer(serializers.Serializer):
-    client = serializers.PrimaryKeyRelatedField(read_only=True)
+    client_id = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Address
         fields = "__all__"
 
     
 class ObservationSerializer(serializers.Serializer):
-    client = serializers.PrimaryKeyRelatedField(read_only=True)
+    client_id = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Observation
         fields = "__all__"
 
 
 class EquipmentSerializer(serializers.Serializer):
-    client = serializers.PrimaryKeyRelatedField(read_only=True)
-    equipment = serializers.PrimaryKeyRelatedField(read_only=True)
+    client_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    equipment_id = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Equipment
         fields = "__all__"
