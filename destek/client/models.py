@@ -179,6 +179,10 @@ class Equipment(models.Model):
         editable=False,
         verbose_name="Equipment"
     )
+    observation = models.CharField(
+        verbose_name="Observation",
+        max_length=256
+    )
 
 
     class Meta:

@@ -7,6 +7,9 @@ from .models import (
     Observation,
     Equipment
 )
+from settings.serializers import (
+    EquipmentSerializer as SettingEquipmentSerializer
+)
 
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,28 +19,33 @@ class ClientSerializer(serializers.ModelSerializer):
 
 class TelephoneSerializer(serializers.ModelSerializer):
     client_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    client = ClientSerializer()
     class Meta:
         model = Telephone
         fields = "__all__"
 
 
-class AddressSerializer(serializers.Serializer):
+class AddressSerializer(serializers.ModelSerializer):
     client_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    client = ClientSerializer()
     class Meta:
         model = Address
         fields = "__all__"
 
     
-class ObservationSerializer(serializers.Serializer):
+class ObservationSerializer(serializers.ModelSerializer):
     client_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    client = ClientSerializer()
     class Meta:
         model = Observation
         fields = "__all__"
 
 
-class EquipmentSerializer(serializers.Serializer):
+class EquipmentSerializer(serializers.ModelSerializer):
     client_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    client = ClientSerializer()
     equipment_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    equipment = SettingEquipmentSerializer()
     class Meta:
         model = Equipment
         fields = "__all__"

@@ -2,12 +2,19 @@ from rest_framework import serializers
 from .models import (
     Setting as SettingModel,
     Equipment as EquipmentModel,
-    EquipmentType as EquipmentTypeModel
+    EquipmentType as EquipmentTypeModel,
+    User as UserModel
 )
 
 class SettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = SettingModel
+        fields = "__all__"
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserModel
         fields = "__all__"
     
 

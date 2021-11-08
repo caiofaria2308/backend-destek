@@ -12,12 +12,14 @@ from rest_framework.generics import get_object_or_404
 from .serializers import (
     SettingSerializer,
     EquipmentSerializer,
-    EquipmentTypeSerializer
+    EquipmentTypeSerializer,
+    UserSerializer
 )
 from .models import (
     Setting,
     Equipment,
-    EquipmentType
+    EquipmentType,
+    User
 )
 
 
@@ -95,6 +97,54 @@ class SettingViewSet(DefaultMixin, APIView):
                     "error": str(e)
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class UserList(DefaultMixin, ListAPIView):
+    search_fields = [
+        '$name',
+        '=email',
+        '$phone'
+    ],
+    filterset_fields = [
+        'support',
+        'staff',
+        'admin'
+    ]
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+    def post(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                if request.data:
+                    serializer = UserSerializer(data=dict(request.data))
+                    if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class UserViewSet(DefaultMixin, APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            obj = get_object_or_404(User, pk=kwargs.get('id'))
+            serializer = UserSerializer(obj, many=False)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 
 class EquipmentList(DefaultMixin, ListAPIView):

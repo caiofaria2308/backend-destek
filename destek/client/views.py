@@ -41,24 +41,18 @@ class ClientList(DefaultMixin, ListAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            obj = Client()
-            data = dict(request.data)
-            serializer = ClientSerializer(obj)
-            serializer.create(data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_201_CREATED
-                )
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            with transaction.atomic():
+                if request.data:
+                    serializer = ClientSerializer(data=dict(request.data))
+                    if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
@@ -99,10 +93,6 @@ class ClientViewSet(DefaultMixin, APIView):
                         serializer.data,
                         status=status.HTTP_200_OK
                     )
-                return Response(
-                    serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST
-                )
         except Exception as e:
             return Response(
                 {
@@ -147,16 +137,20 @@ class TelephoneList(DefaultMixin, ListAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            data = dict(request.data)
-            obj = Telephone()
-            serializer = TelephoneSerializer(obj)
-            serializer.update(obj, data)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            with transaction.atomic():
+                if request.data:
+                    serializer = TelephoneSerializer(data=dict(request.data))
+                    if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
 
 class TelephoneViewSet(DefaultMixin, APIView):
@@ -196,10 +190,6 @@ class TelephoneViewSet(DefaultMixin, APIView):
                         serializer.data,
                         status=status.HTTP_200_OK
                     )
-                return Response(
-                    serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST
-                )
         except Exception as e:
             return Response(
                 {
@@ -246,15 +236,18 @@ class AddressList(DefaultMixin, ListAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            data = dict(request.data)
-            obj = Address()
-            serializer = AddressSerializer(obj)
-            serializer.update(obj, data)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            with transaction.atomic():
+                if request.data:
+                    serializer = AddressSerializer(data=dict(request.data))
+                    if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
@@ -297,10 +290,6 @@ class AddressViewSet(DefaultMixin, APIView):
                         serializer.data,
                         status=status.HTTP_200_OK
                     )
-                return Response(
-                    serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST
-                )
         except Exception as e:
             return Response(
                 {
@@ -332,7 +321,7 @@ class AddressViewSet(DefaultMixin, APIView):
 
 
 class ObservationList(DefaultMixin, ListAPIView):
-    queryset = Observation.objects.all().order_by('title')
+    queryset = Observation.objects.all().order_by('updated_at').reverse()
     serializer_class = ObservationSerializer
     filterset_fields = [
         'client'
@@ -345,24 +334,18 @@ class ObservationList(DefaultMixin, ListAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            obj = Observation()
-            data = dict(request.data)
-            serializer = ObservationSerializer(obj)
-            serializer.create(data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_201_CREATED
-                )
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            with transaction.atomic():
+                if request.data:
+                    serializer = ObservationSerializer(data=dict(request.data))
+                    if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
@@ -404,10 +387,6 @@ class ObservationViewSet(DefaultMixin, APIView):
                 return Response(
                     serializer.data,
                     status=status.HTTP_200_OK
-                )
-                return Response(
-                    serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST
                 )
         except Exception as e:
             return Response(
@@ -453,15 +432,18 @@ class EquipmentList(DefaultMixin, ListAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            data = dict(request.data)
-            obj = Equipment()
-            serializer = EquipmentSerializer(obj)
-            serializer.update(obj, data)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            with transaction.atomic():
+                if request.data:
+                    serializer = EquipmentSerializer(data=dict(request.data))
+                    if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
@@ -503,10 +485,6 @@ class EquipmentViewSet(DefaultMixin, APIView):
                 return Response(
                     serializer.data,
                     status=status.HTTP_200_OK
-                )
-                return Response(
-                    serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST
                 )
         except Exception as e:
             return Response(

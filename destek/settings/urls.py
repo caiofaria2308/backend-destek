@@ -5,7 +5,9 @@ from .views import (
     EquipmentList,
     EquipmentViewSet,
     EquipmentTypeList,
-    EquipmentTypeViewSet
+    EquipmentTypeViewSet,
+    UserList,
+    UserViewSet
 )
 
 
@@ -18,4 +20,7 @@ urlpatterns = [
 
     path('settings-equipment-type/', EquipmentTypeList.as_view()),
     path('settings-equipment-type/<str:id>', EquipmentTypeViewSet.as_view()),
+
+    path('user/', UserList.as_view()),
+    path('user/<int:id>', UserViewSet.as_view()),
 ]
