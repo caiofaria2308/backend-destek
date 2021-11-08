@@ -19,10 +19,10 @@ from django.urls import path, include
 from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
 from rest_framework_jwt.views import verify_jwt_token
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('settings.urls')),
-    url(r'api/auth/', obtain_jwt_token),
-    url(r'api/auth/refresh/', refresh_jwt_token),
-    url(r'api/auth/verify/', verify_jwt_token)
+    path('api/', include('client.urls')),
+    url(r'api/auth/', obtain_jwt_token)
 ]

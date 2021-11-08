@@ -3,6 +3,7 @@ from django.contrib.auth.models import (
     BaseUserManager,
     AbstractBaseUser
 )
+from django.db.models.deletion import CASCADE
 import uuid
 
 
@@ -100,11 +101,81 @@ class User(AbstractBaseUser):
 
 
 class Setting(models.Model):
-    id = models.UUIDField(primary_key=True, auto_created=True, default=uuid.uuid4, editable=False)
-    label = models.CharField(verbose_name="label of setting", max_length=255, unique=True)
+    id = models.UUIDField(
+        verbose_name="ID",
+        primary_key=True,
+        default=uuid.uuid4,
+        auto_created=True
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Created date",
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        verbose_name="Updated date",
+        auto_now=True
+    )
+    label = models.CharField(verbose_name="label of setting", max_length=256, unique=True)
     value = models.TextField(verbose_name="Value of setting")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['label']
+
+
+class EquipmentType(models.Model):
+    id = models.UUIDField(
+        verbose_name="ID",
+        primary_key=True,
+        default=uuid.uuid4,
+        auto_created=True
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Created date",
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        verbose_name="Updated date",
+        auto_now=True
+    )
+    type = models.CharField(
+        max_length=50,
+        unique=True
+    )
+
+
+class Equipment(models.Model):
+    id = models.UUIDField(
+        verbose_name="ID",
+        primary_key=True,
+        default=uuid.uuid4,
+        auto_created=True
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Created date",
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        verbose_name="Updated date",
+        auto_now=True
+    )
+    brand = models.CharField(
+        verbose_name="Brand of equipment",
+        max_length=100
+    )
+    model = models.CharField(
+        verbose_name="Model of equipment",
+        max_length=100
+    )
+    type = models.ForeignKey(
+        "settings.EquipmentType", 
+        related_name="+", 
+        on_delete=CASCADE
+    )
+    is_active = models.BooleanField(
+        verbose_name="Equipment is active?", 
+        default=True
+    )
+
+
+    class Meta:
+        ordering = ['brand', 'model']
