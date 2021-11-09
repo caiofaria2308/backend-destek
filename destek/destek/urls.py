@@ -22,7 +22,8 @@ from rest_framework_jwt.views import verify_jwt_token
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('settings.urls')),
-    path('api/', include('client.urls')),
+    path('api/settings/', include('settings.urls')),
+    path('api/client/', include('client.urls')),
+    path('api/iticket/', include('iticket.urls')),
     url(r'api/auth/', obtain_jwt_token)
 ]

@@ -6,34 +6,29 @@ from rest_framework.views import APIView
 from rest_framework import filters
 from defaults import DefaultMixin
 from rest_framework.generics import ListAPIView, get_object_or_404
-
 from .models import (
-    Client,
-    Telephone,
-    Address,
-    Observation,
-    Equipment
+    Priority,
+    Ticket,
+    TicketEquipment,
+    TicketTracking,
+    TicketTrackingFile
 )
-
 from .serializers import (
-    ClientSerializer,
-    TelephoneSerializer,
-    AddressSerializer,
-    ObservationSerializer,
-    EquipmentSerializer
+    PrioritySerializer,
+    TicketSerializer,
+    TicketEquipmentSerializer,
+    TicketTrackingSerializer,
+    TicketTrackingFileSerializer
 )
 
 
-class ClientList(DefaultMixin, ListAPIView):
-    queryset = Client.objects.all().order_by('is_active')
-    serializer_class = ClientSerializer
+class PriorityList(DefaultMixin, ListAPIView):
+    queryset = Priority.objects.all().order_by('name')
+    serializer_class = PrioritySerializer
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     search_fields = [
-        '$corporate_name',
-        '$fantasy_name',
-        '^main_document',
-        '^secondary_document',
-        '^reference_code'
+        '$name',
+        '$color'
     ]
 
 
@@ -41,7 +36,7 @@ class ClientList(DefaultMixin, ListAPIView):
         try:
             with transaction.atomic():
                 if request.data:
-                    serializer = ClientSerializer(data=dict(request.data))
+                    serializer = PrioritySerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -54,14 +49,14 @@ class ClientList(DefaultMixin, ListAPIView):
             )
 
 
-class ClientViewSet(DefaultMixin, APIView):
+class PriorityViewSet(DefaultMixin, APIView):
     def get(self, request, *args, **kwargs):
         try:
             obj = get_object_or_404(
-                Client,
+                Priority,
                 pk=kwargs.get('id')
             )
-            serializer = ClientSerializer(obj)
+            serializer = PrioritySerializer(obj)
             return Response(
                 serializer.data,
                 status=status.HTTP_200_OK
@@ -78,14 +73,14 @@ class ClientViewSet(DefaultMixin, APIView):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
-                    Client,
+                    Priority,
                     pk=kwargs.get('id')
                 )
                 data = dict(request.data)
                 for key, value in data.items():
                     setattr(obj, key, value)
                 obj.save()
-                serializer = ClientSerializer(obj)
+                serializer = PrioritySerializer(obj)
                 serializer.update(obj, data)
                 return Response(
                         serializer.data,
@@ -103,13 +98,13 @@ class ClientViewSet(DefaultMixin, APIView):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
-                    Client,
+                    Priority,
                     pk=kwargs.get('id')
                 )
                 obj.delete()
                 return Response(
                     {
-                        'detail': f'Client deleted'
+                        'detail': f'Priority deleted'
                     },
                     status=status.HTTP_200_OK
                 )
@@ -121,15 +116,17 @@ class ClientViewSet(DefaultMixin, APIView):
             )
 
 
-class TelephoneList(DefaultMixin, ListAPIView):
-    queryset = Telephone.objects.all().order_by('is_active')
-    serializer_class = TelephoneSerializer
+class TicketList(DefaultMixin, ListAPIView):
+    queryset = Ticket.objects.all().order_by('created_at').reverse()
+    serializer_class = TicketSerializer
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
-    filterset_fields = [
-        'client'
-    ]
     search_fields = [
-        '$telephone'
+        '$title'
+    ]
+    filterset_fields = [
+        'status',
+        'user',
+        'unique_code'
     ]
 
 
@@ -137,7 +134,7 @@ class TelephoneList(DefaultMixin, ListAPIView):
         try:
             with transaction.atomic():
                 if request.data:
-                    serializer = TelephoneSerializer(data=dict(request.data))
+                    serializer = TicketSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -150,15 +147,14 @@ class TelephoneList(DefaultMixin, ListAPIView):
             )
 
 
-
-class TelephoneViewSet(DefaultMixin, APIView):
+class TicketViewSet(DefaultMixin, APIView):
     def get(self, request, *args, **kwargs):
         try:
             obj = get_object_or_404(
-                Telephone,
+                Ticket,
                 pk=kwargs.get('id')
             )
-            serializer = TelephoneSerializer(obj)
+            serializer = TicketSerializer(obj)
             return Response(
                 serializer.data,
                 status=status.HTTP_200_OK
@@ -175,15 +171,15 @@ class TelephoneViewSet(DefaultMixin, APIView):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
-                    Telephone,
+                    Ticket,
                     pk=kwargs.get('id')
                 )
                 data = dict(request.data)
                 for key, value in data.items():
                     setattr(obj, key, value)
-                serializer = TelephoneSerializer(obj)
-                serializer.update(obj, data)
                 obj.save()
+                serializer = TicketSerializer(obj)
+                serializer.update(obj, data)
                 return Response(
                         serializer.data,
                         status=status.HTTP_200_OK
@@ -200,13 +196,13 @@ class TelephoneViewSet(DefaultMixin, APIView):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
-                    Telephone,
+                    Ticket,
                     pk=kwargs.get('id')
                 )
                 obj.delete()
                 return Response(
                     {
-                        'detail': f'Telephone deleted'
+                        'detail': f'Ticket deleted'
                     },
                     status=status.HTTP_200_OK
                 )
@@ -218,17 +214,13 @@ class TelephoneViewSet(DefaultMixin, APIView):
             )
 
 
-class AddressList(DefaultMixin, ListAPIView):
-    queryset = Address.objects.all().order_by('zip_code')
-    serializer_class = AddressSerializer
+class TicketEquipmentList(DefaultMixin, ListAPIView):
+    queryset = TicketEquipment.objects.all().order_by('updated_at')
+    serializer_class = TicketEquipmentSerializer
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_fields = [
-        'client'
-    ]
-    search_fields = [
-        '^zip_code',
-        '$address',
-        '=city'
+        'equipment',
+        'ticket'
     ]
 
 
@@ -236,7 +228,7 @@ class AddressList(DefaultMixin, ListAPIView):
         try:
             with transaction.atomic():
                 if request.data:
-                    serializer = AddressSerializer(data=dict(request.data))
+                    serializer = TicketEquipmentSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -249,25 +241,23 @@ class AddressList(DefaultMixin, ListAPIView):
             )
 
 
-class AddressViewSet(DefaultMixin, APIView):
+class TicketEquipmentViewSet(DefaultMixin, APIView):
     def get(self, request, *args, **kwargs):
         try:
-            with transaction.atomic():
-                obj = get_object_or_404(
-                    Address,
-                    pk=kwargs.get('id')
-                )
-                serializer = AddressSerializer(obj)
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_200_OK
-                )
+            obj = get_object_or_404(
+                TicketEquipment,
+                pk=kwargs.get('id')
+            )
+            serializer = TicketEquipmentSerializer(obj)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
         except Exception as e:
             return Response(
                 {
                     "error": str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
@@ -275,15 +265,15 @@ class AddressViewSet(DefaultMixin, APIView):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
-                    Address,
+                    TicketEquipment,
                     pk=kwargs.get('id')
                 )
                 data = dict(request.data)
                 for key, value in data.items():
                     setattr(obj, key, value)
-                serializer = AddressSerializer(obj)
-                serializer.update(obj, data)
                 obj.save()
+                serializer = TicketEquipmentSerializer(obj)
+                serializer.update(obj, data)
                 return Response(
                         serializer.data,
                         status=status.HTTP_200_OK
@@ -292,139 +282,40 @@ class AddressViewSet(DefaultMixin, APIView):
             return Response(
                 {
                     "error": str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-    def delete(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                obj = get_object_or_404(
-                    Address,
-                    pk=kwargs.get('id')
-                )
-                obj.delete()
-                return Response(
-                    {"detail": "Deleted with successful"},
-                    status=status.HTTP_200_OK
-                )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-class ObservationList(DefaultMixin, ListAPIView):
-    queryset = Observation.objects.all().order_by('updated_at').reverse()
-    serializer_class = ObservationSerializer
-    filterset_fields = [
-        'client'
-    ]
-    search_fields = [
-        '$title',
-        '$information'
-    ]
-
-
-    def post(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                if request.data:
-                    serializer = ObservationSerializer(data=dict(request.data))
-                    if serializer.is_valid():
-                        serializer.save()
-                        return Response(serializer.data, status=status.HTTP_201_CREATED)
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
-class ObservationViewSet(DefaultMixin, APIView):
-    def get(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                obj = get_object_or_404(
-                    Observation,
-                    pk=kwargs.get('id')
-                )
-                serializer = ObservationSerializer(obj)
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_200_OK
-                )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-    def put(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                obj = get_object_or_404(
-                    Observation,
-                    pk=kwargs.get('id')
-                )
-                data = dict(request.data)
-                for key, value in data.items():
-                    setattr(obj, key, value)
-                serializer = ObservationSerializer(obj)
-                serializer.update(obj, data)
-                obj.save()
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_200_OK
-                )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-    def delete(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                obj = get_object_or_404(
-                    Observation,
-                    pk=kwargs.get('id')
-                )
-                obj.delete()
-                return Response(
-                    {"detail": "Deleted with successful"},
-                    status=status.HTTP_200_OK
-                )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-class EquipmentList(DefaultMixin, ListAPIView):
-    queryset = Equipment.objects.all().order_by('created_at')
-    serializer_class = EquipmentSerializer
-    filterset_fields = [
-        'client',
-        'equipment'
-    ]
-    search_fields = [
         
+    def delete(self, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                obj = get_object_or_404(
+                    TicketEquipment,
+                    pk=kwargs.get('id')
+                )
+                obj.delete()
+                return Response(
+                    {
+                        'detail': f'TicketEquipment deleted'
+                    },
+                    status=status.HTTP_200_OK
+                )
+        except Exception as e:
+            return Response(
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class TicketTrackingList(DefaultMixin, ListAPIView):
+    queryset = TicketTracking.objects.all().order_by('updated_at')
+    serializer_class = TicketTrackingSerializer
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
+    filterset_fields = [
+        'ticket',
+        'user',
+        'status'
     ]
 
 
@@ -432,7 +323,7 @@ class EquipmentList(DefaultMixin, ListAPIView):
         try:
             with transaction.atomic():
                 if request.data:
-                    serializer = EquipmentSerializer(data=dict(request.data))
+                    serializer = TicketTrackingSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -445,25 +336,23 @@ class EquipmentList(DefaultMixin, ListAPIView):
             )
 
 
-class EquipmentViewSet(DefaultMixin, APIView):
+class TicketTrackingViewSet(DefaultMixin, APIView):
     def get(self, request, *args, **kwargs):
         try:
-            with transaction.atomic():
-                obj = get_object_or_404(
-                    Equipment,
-                    pk=kwargs.get('id')
-                )
-                serializer = EquipmentSerializer(obj)
-                return Response(
-                    serializer.data,
-                    status=status.HTTP_200_OK
-                )
+            obj = get_object_or_404(
+                TicketTracking,
+                pk=kwargs.get('id')
+            )
+            serializer = TicketTrackingSerializer(obj)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
         except Exception as e:
             return Response(
                 {
                     "error": str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
@@ -471,44 +360,138 @@ class EquipmentViewSet(DefaultMixin, APIView):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
-                    Equipment,
+                    TicketTracking,
                     pk=kwargs.get('id')
                 )
                 data = dict(request.data)
                 for key, value in data.items():
                     setattr(obj, key, value)
-                serializer = EquipmentSerializer(obj)
-                serializer.update(obj, data)
                 obj.save()
+                serializer = TicketTrackingSerializer(obj)
+                serializer.update(obj, data)
                 return Response(
-                    serializer.data,
-                    status=status.HTTP_200_OK
-                )
+                        serializer.data,
+                        status=status.HTTP_200_OK
+                    )
         except Exception as e:
             return Response(
                 {
                     "error": str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
-    def delete(self, request, *args, **kwargs):
+        
+    def delete(self, *args, **kwargs):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
-                    Equipment,
+                    TicketTracking,
                     pk=kwargs.get('id')
                 )
                 obj.delete()
                 return Response(
-                    {"detail": "Deleted with successful"},
+                    {
+                        'detail': f'Ticket Tracking deleted'
+                    },
                     status=status.HTTP_200_OK
                 )
         except Exception as e:
             return Response(
                 {
                     "error": str(e)
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class TicketTrackingFileList(DefaultMixin, ListAPIView):
+    queryset = TicketTrackingFile.objects.all().order_by('updated_at')
+    serializer_class = TicketTrackingFileSerializer
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
+    filterset_fields = [
+        'ticket_tracking'
+    ]
+
+
+    def post(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                if request.data:
+                    print(request.data)
+                    serializer = TicketTrackingFileSerializer(data=dict(request.data))
+                    if serializer.is_valid():
+                        serializer.save()
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class TicketTrackingFileViewSet(DefaultMixin, APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            obj = get_object_or_404(
+                TicketTrackingFile,
+                pk=kwargs.get('id')
+            )
+            serializer = TicketTrackingFileSerializer(obj)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+    def put(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                obj = get_object_or_404(
+                    TicketTrackingFile,
+                    pk=kwargs.get('id')
+                )
+                data = dict(request.data)
+                for key, value in data.items():
+                    setattr(obj, key, value)
+                obj.save()
+                serializer = TicketTrackingFileSerializer(obj)
+                serializer.update(obj, data)
+                return Response(
+                        serializer.data,
+                        status=status.HTTP_200_OK
+                    )
+        except Exception as e:
+            return Response(
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        
+    def delete(self, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                obj = get_object_or_404(
+                    TicketTrackingFile,
+                    pk=kwargs.get('id')
+                )
+                obj.delete()
+                return Response(
+                    {
+                        'detail': f'Ticket Tracking File deleted'
+                    },
+                    status=status.HTTP_200_OK
+                )
+        except Exception as e:
+            return Response(
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
