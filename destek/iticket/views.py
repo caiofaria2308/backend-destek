@@ -416,7 +416,6 @@ class TicketTrackingFileList(DefaultMixin, ListAPIView):
         try:
             with transaction.atomic():
                 if request.data:
-                    print(request.data)
                     serializer = TicketTrackingFileSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
