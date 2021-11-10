@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework import filters
 from defaults import DefaultMixin
 from rest_framework.generics import ListAPIView, get_object_or_404
-
+from rest_framework.request import Request
 from .models import (
     Client,
     Telephone,
@@ -22,6 +22,9 @@ from .serializers import (
     ObservationSerializer,
     EquipmentSerializer
 )
+from destek.settings import SECRET_KEY
+from log.serializers import LogSerializer
+import jwt
 
 
 class ClientList(DefaultMixin, ListAPIView):
@@ -44,6 +47,18 @@ class ClientList(DefaultMixin, ListAPIView):
                     serializer = ClientSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'client_client',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -74,7 +89,7 @@ class ClientViewSet(DefaultMixin, APIView):
             )
 
 
-    def put(self, request, *args, **kwargs):
+    def put(self, request: Request, *args, **kwargs):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
@@ -87,6 +102,18 @@ class ClientViewSet(DefaultMixin, APIView):
                 obj.save()
                 serializer = ClientSerializer(obj)
                 serializer.update(obj, data)
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'client_client',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                         serializer.data,
                         status=status.HTTP_200_OK
@@ -99,7 +126,7 @@ class ClientViewSet(DefaultMixin, APIView):
             )
 
         
-    def delete(self, *args, **kwargs):
+    def delete(self, request,*args, **kwargs):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
@@ -107,6 +134,18 @@ class ClientViewSet(DefaultMixin, APIView):
                     pk=kwargs.get('id')
                 )
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'client_client',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 2
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {
                         'detail': f'Client deleted'
@@ -140,6 +179,18 @@ class TelephoneList(DefaultMixin, ListAPIView):
                     serializer = TelephoneSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'client_telephone',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -184,6 +235,18 @@ class TelephoneViewSet(DefaultMixin, APIView):
                 serializer = TelephoneSerializer(obj)
                 serializer.update(obj, data)
                 obj.save()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'client_telephone',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                         serializer.data,
                         status=status.HTTP_200_OK
@@ -196,7 +259,7 @@ class TelephoneViewSet(DefaultMixin, APIView):
             )
 
         
-    def delete(self, *args, **kwargs):
+    def delete(self, request,*args, **kwargs):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
@@ -204,6 +267,18 @@ class TelephoneViewSet(DefaultMixin, APIView):
                     pk=kwargs.get('id')
                 )
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'client_telephone',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 2
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {
                         'detail': f'Telephone deleted'
@@ -239,6 +314,18 @@ class AddressList(DefaultMixin, ListAPIView):
                     serializer = AddressSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'client_address',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -284,6 +371,18 @@ class AddressViewSet(DefaultMixin, APIView):
                 serializer = AddressSerializer(obj)
                 serializer.update(obj, data)
                 obj.save()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'client_address',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                         serializer.data,
                         status=status.HTTP_200_OK
@@ -305,6 +404,18 @@ class AddressViewSet(DefaultMixin, APIView):
                     pk=kwargs.get('id')
                 )
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'client_address',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 2
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {"detail": "Deleted with successful"},
                     status=status.HTTP_200_OK
@@ -337,6 +448,18 @@ class ObservationList(DefaultMixin, ListAPIView):
                     serializer = ObservationSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'client_observation',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -382,6 +505,18 @@ class ObservationViewSet(DefaultMixin, APIView):
                 serializer = ObservationSerializer(obj)
                 serializer.update(obj, data)
                 obj.save()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'client_observation',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     serializer.data,
                     status=status.HTTP_200_OK
@@ -403,6 +538,18 @@ class ObservationViewSet(DefaultMixin, APIView):
                     pk=kwargs.get('id')
                 )
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'client_observation',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 2
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {"detail": "Deleted with successful"},
                     status=status.HTTP_200_OK
@@ -435,6 +582,18 @@ class EquipmentList(DefaultMixin, ListAPIView):
                     serializer = EquipmentSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'client_equipment',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -480,6 +639,18 @@ class EquipmentViewSet(DefaultMixin, APIView):
                 serializer = EquipmentSerializer(obj)
                 serializer.update(obj, data)
                 obj.save()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'client_equipment',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     serializer.data,
                     status=status.HTTP_200_OK
@@ -501,6 +672,18 @@ class EquipmentViewSet(DefaultMixin, APIView):
                     pk=kwargs.get('id')
                 )
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'client_equipment',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 2
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {"detail": "Deleted with successful"},
                     status=status.HTTP_200_OK

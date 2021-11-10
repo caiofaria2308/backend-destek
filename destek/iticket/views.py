@@ -1,6 +1,7 @@
 from django.db import transaction
 from django_filters.rest_framework.backends import DjangoFilterBackend
 from rest_framework import status
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import filters
@@ -21,6 +22,10 @@ from .serializers import (
     TicketTrackingFileSerializer
 )
 
+from log.serializers import LogSerializer
+from destek.settings import SECRET_KEY
+import jwt
+
 
 class PriorityList(DefaultMixin, ListAPIView):
     queryset = Priority.objects.all().order_by('name')
@@ -32,13 +37,26 @@ class PriorityList(DefaultMixin, ListAPIView):
     ]
 
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args, **kwargs):
         try:
             with transaction.atomic():
                 if request.data:
                     serializer = PrioritySerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'iticket_priority',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
+                        
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -82,6 +100,18 @@ class PriorityViewSet(DefaultMixin, APIView):
                 obj.save()
                 serializer = PrioritySerializer(obj)
                 serializer.update(obj, data)
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'iticket_priority',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                         serializer.data,
                         status=status.HTTP_200_OK
@@ -94,7 +124,7 @@ class PriorityViewSet(DefaultMixin, APIView):
             )
 
         
-    def delete(self, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
@@ -102,6 +132,18 @@ class PriorityViewSet(DefaultMixin, APIView):
                     pk=kwargs.get('id')
                 )
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'iticket_priority',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 2
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {
                         'detail': f'Priority deleted'
@@ -125,7 +167,7 @@ class TicketList(DefaultMixin, ListAPIView):
     ]
     filterset_fields = [
         'status',
-        'user',
+        'user_id',
         'unique_code'
     ]
 
@@ -137,6 +179,18 @@ class TicketList(DefaultMixin, ListAPIView):
                     serializer = TicketSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'iticket_ticket',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -180,6 +234,18 @@ class TicketViewSet(DefaultMixin, APIView):
                 obj.save()
                 serializer = TicketSerializer(obj)
                 serializer.update(obj, data)
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'iticket_ticket',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                         serializer.data,
                         status=status.HTTP_200_OK
@@ -192,7 +258,7 @@ class TicketViewSet(DefaultMixin, APIView):
             )
 
         
-    def delete(self, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
@@ -200,6 +266,18 @@ class TicketViewSet(DefaultMixin, APIView):
                     pk=kwargs.get('id')
                 )
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'iticket_ticket',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 2
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {
                         'detail': f'Ticket deleted'
@@ -231,6 +309,18 @@ class TicketEquipmentList(DefaultMixin, ListAPIView):
                     serializer = TicketEquipmentSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'iticket_ticketequipment',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -274,6 +364,18 @@ class TicketEquipmentViewSet(DefaultMixin, APIView):
                 obj.save()
                 serializer = TicketEquipmentSerializer(obj)
                 serializer.update(obj, data)
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'iticket_ticketequipment',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                         serializer.data,
                         status=status.HTTP_200_OK
@@ -286,7 +388,7 @@ class TicketEquipmentViewSet(DefaultMixin, APIView):
             )
 
         
-    def delete(self, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
@@ -294,6 +396,18 @@ class TicketEquipmentViewSet(DefaultMixin, APIView):
                     pk=kwargs.get('id')
                 )
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'iticket_ticketequipment',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 2
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {
                         'detail': f'TicketEquipment deleted'
@@ -314,7 +428,7 @@ class TicketTrackingList(DefaultMixin, ListAPIView):
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_fields = [
         'ticket',
-        'user',
+        'user_id',
         'status'
     ]
 
@@ -326,6 +440,18 @@ class TicketTrackingList(DefaultMixin, ListAPIView):
                     serializer = TicketTrackingSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'iticket_tickettracking',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -369,6 +495,18 @@ class TicketTrackingViewSet(DefaultMixin, APIView):
                 obj.save()
                 serializer = TicketTrackingSerializer(obj)
                 serializer.update(obj, data)
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'iticket_tickettracking',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                         serializer.data,
                         status=status.HTTP_200_OK
@@ -381,7 +519,7 @@ class TicketTrackingViewSet(DefaultMixin, APIView):
             )
 
         
-    def delete(self, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
@@ -389,6 +527,18 @@ class TicketTrackingViewSet(DefaultMixin, APIView):
                     pk=kwargs.get('id')
                 )
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'iticket_tickettracking',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 2
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {
                         'detail': f'Ticket Tracking deleted'
@@ -419,6 +569,18 @@ class TicketTrackingFileList(DefaultMixin, ListAPIView):
                     serializer = TicketTrackingFileSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'iticket_tickettrackingfile',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -462,6 +624,18 @@ class TicketTrackingFileViewSet(DefaultMixin, APIView):
                 obj.save()
                 serializer = TicketTrackingFileSerializer(obj)
                 serializer.update(obj, data)
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'iticket_tickettrackingfile',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                         serializer.data,
                         status=status.HTTP_200_OK
@@ -474,7 +648,7 @@ class TicketTrackingFileViewSet(DefaultMixin, APIView):
             )
 
         
-    def delete(self, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
@@ -482,6 +656,18 @@ class TicketTrackingFileViewSet(DefaultMixin, APIView):
                     pk=kwargs.get('id')
                 )
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'iticket_tickettrackingfile',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {
                         'detail': f'Ticket Tracking File deleted'

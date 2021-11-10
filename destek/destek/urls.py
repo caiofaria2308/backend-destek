@@ -25,5 +25,6 @@ urlpatterns = [
     path('api/settings/', include('settings.urls')),
     path('api/client/', include('client.urls')),
     path('api/iticket/', include('iticket.urls')),
+    path('api/log/', include('log.urls')),
     url(r'api/auth/', obtain_jwt_token)
 ]
