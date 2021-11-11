@@ -12,7 +12,7 @@ Framework: Django
   *1: Execute o comando: pip install -r requirements.txt
 </p>
 <p>
-  *2: Entre na pasta <b>Destek</b>, renomeie o arquivo .env-model  para .env e preencha o campo secret key
+  *2: Renomeie o arquivo .env-model  para .env e preencha o campo secret key
 </p>
 <p>
   *3: Os valores a serem preenchidos no arquivo .env devem ser criptografados, utilize o programa CRIPTOGRAFADOR.PY para auxilia-lo.
