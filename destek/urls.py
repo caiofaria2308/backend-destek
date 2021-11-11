@@ -26,5 +26,6 @@ urlpatterns = [
     path('api/client/', include('client.urls')),
     path('api/iticket/', include('iticket.urls')),
     path('api/log/', include('log.urls')),
+    path('api/visitqueue/', include('visit_queue.urls')),
     url(r'api/auth/', obtain_jwt_token)
 ]

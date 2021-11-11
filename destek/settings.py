@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'settings',
     'client',
     'iticket',
-    'log'
+    'log',
+    'visit_queue'
 ]
 
 MIDDLEWARE = [

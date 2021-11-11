@@ -3,45 +3,171 @@ from django_filters.rest_framework.backends import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.utils import serializer_helpers
 from rest_framework.views import APIView
 from rest_framework import filters
 from defaults import DefaultMixin
 from rest_framework.generics import ListAPIView, get_object_or_404
+
+from iticket.serializers import TicketSerializer
 from .models import (
-    Priority,
-    Ticket,
-    TicketEquipment,
-    TicketTracking,
-    TicketTrackingFile
+    Vacation,
+    Type,
+    VisitQueue
 )
 from .serializers import (
-    PrioritySerializer,
-    TicketSerializer,
-    TicketEquipmentSerializer,
-    TicketTrackingSerializer,
-    TicketTrackingFileSerializer
+    VacationSerializer,
+    TypeSerializer,
+    VisitQueueSerializer
 )
-
 from log.serializers import LogSerializer
 from destek.settings import SECRET_KEY
 import jwt
 
 
-class PriorityList(DefaultMixin, ListAPIView):
-    queryset = Priority.objects.all().order_by('name')
-    serializer_class = PrioritySerializer
+class VacationList(DefaultMixin, ListAPIView):
+    queryset = Vacation.objects.all().order_by('final_date').reverse()
+    serializer_class = VacationSerializer
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
+    filterset_fields = [
+        'user'
+    ]
+    
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                if request.data:
+                    serializer = VacationSerializer(data=dict(request.data))
+                    if serializer.is_valid():
+                        serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'visit_queue_vacation',
+                            'primary_key': serializer.data.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
+                        return Response(serializer.data, status=status.HTTP_201_CREATED)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class VacationViewSet(DefaultMixin, APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            obj = get_object_or_404(
+                VisitQueue,
+                pk=kwargs.get('id')
+            )
+            serializer = VacationSerializer(obj)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+    def put(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                obj = get_object_or_404(
+                    Vacation,
+                    pk=kwargs.get('id')
+                )
+                data = dict(request.data)
+                for key, value in data.items():
+                    setattr(obj, key, value)
+                obj.save()
+                serializer = VacationSerializer(obj)
+                serializer.update(obj, data)
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'visit_queue_vacation',
+                    'primary_key': serializer.data.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
+                return Response(
+                        serializer.data,
+                        status=status.HTTP_200_OK
+                    )
+        except Exception as e:
+            return Response(
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        
+    def delete(self, request, *args, **kwargs):
+        try:
+            with transaction.atomic():
+                obj = get_object_or_404(
+                    Vacation,
+                    pk=kwargs.get('id')
+                )
+                obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'visit_queue_vacation',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
+                return Response(
+                    {
+                        'detail': f'Vacation deleted'
+                    },
+                    status=status.HTTP_200_OK
+                )
+        except Exception as e:
+            return Response(
+                {
+                    "error": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+            
+class TypeList(DefaultMixin, ListAPIView):
+    queryset = Type.objects.all().order_by('name')
+    serializer_class = TypeSerializer
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     search_fields = [
-        '$name',
-        '$color'
+        '$name'
     ]
 
 
-    def post(self, request: Request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         try:
             with transaction.atomic():
                 if request.data:
-                    serializer = PrioritySerializer(data=dict(request.data))
+                    serializer = TypeSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
                         user = jwt.decode(
@@ -50,13 +176,12 @@ class PriorityList(DefaultMixin, ListAPIView):
                         )
                         log = LogSerializer(data = {
                             'user_id': user.get('user_id'),
-                            'table': 'iticket_priority',
+                            'table': 'visit_queue_type',
                             'primary_key': serializer.data.get('id'),
                             'data': serializer.data,
                             'type': 0
                         })
                         log.save() if log.is_valid() else None
-                        
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -67,14 +192,14 @@ class PriorityList(DefaultMixin, ListAPIView):
             )
 
 
-class PriorityViewSet(DefaultMixin, APIView):
+class TypeViewSet(DefaultMixin, APIView):
     def get(self, request, *args, **kwargs):
         try:
             obj = get_object_or_404(
-                Priority,
+                Type,
                 pk=kwargs.get('id')
             )
-            serializer = PrioritySerializer(obj)
+            serializer = TypeSerializer(obj)
             return Response(
                 serializer.data,
                 status=status.HTTP_200_OK
@@ -91,14 +216,14 @@ class PriorityViewSet(DefaultMixin, APIView):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
-                    Priority,
+                    Type,
                     pk=kwargs.get('id')
                 )
                 data = dict(request.data)
                 for key, value in data.items():
                     setattr(obj, key, value)
                 obj.save()
-                serializer = PrioritySerializer(obj)
+                serializer = TypeSerializer(obj)
                 serializer.update(obj, data)
                 user = jwt.decode(
                             request.auth,
@@ -106,7 +231,7 @@ class PriorityViewSet(DefaultMixin, APIView):
                         )
                 log = LogSerializer(data = {
                     'user_id': user.get('user_id'),
-                    'table': 'iticket_priority',
+                    'table': 'visit_queue_type',
                     'primary_key': serializer.data.get('id'),
                     'data': serializer.data,
                     'type': 1
@@ -128,7 +253,7 @@ class PriorityViewSet(DefaultMixin, APIView):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
-                    Priority,
+                    Type,
                     pk=kwargs.get('id')
                 )
                 obj.delete()
@@ -138,15 +263,15 @@ class PriorityViewSet(DefaultMixin, APIView):
                         )
                 log = LogSerializer(data = {
                     'user_id': user.get('user_id'),
-                    'table': 'iticket_priority',
+                    'table': 'visit_queue_type',
                     'primary_key': kwargs.get('id'),
                     'data': {},
-                    'type': 2
+                    'type': 1
                 })
                 log.save() if log.is_valid() else None
                 return Response(
                     {
-                        'detail': f'Priority deleted'
+                        'detail': f'Type File deleted'
                     },
                     status=status.HTTP_200_OK
                 )
@@ -156,19 +281,16 @@ class PriorityViewSet(DefaultMixin, APIView):
                     "error": str(e)
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
-
-class TicketList(DefaultMixin, ListAPIView):
-    queryset = Ticket.objects.all().order_by('created_at').reverse()
-    serializer_class = TicketSerializer
+            
+            
+class VisitQueueList(DefaultMixin, ListAPIView):
+    queryset = VisitQueue.objects.all().order_by('visit_date').reverse()
+    serializer_class = VisitQueueSerializer
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
-    search_fields = [
-        '$title'
-    ]
     filterset_fields = [
-        'status',
-        'user_id',
-        'unique_code'
+        'user',
+        'client',
+        'type'
     ]
 
 
@@ -176,7 +298,7 @@ class TicketList(DefaultMixin, ListAPIView):
         try:
             with transaction.atomic():
                 if request.data:
-                    serializer = TicketSerializer(data=dict(request.data))
+                    serializer = VisitQueueSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
                         user = jwt.decode(
@@ -185,7 +307,7 @@ class TicketList(DefaultMixin, ListAPIView):
                         )
                         log = LogSerializer(data = {
                             'user_id': user.get('user_id'),
-                            'table': 'iticket_ticket',
+                            'table': 'visit_queue_visitqueue',
                             'primary_key': serializer.data.get('id'),
                             'data': serializer.data,
                             'type': 0
@@ -201,14 +323,14 @@ class TicketList(DefaultMixin, ListAPIView):
             )
 
 
-class TicketViewSet(DefaultMixin, APIView):
+class VisitQueueViewSet(DefaultMixin, APIView):
     def get(self, request, *args, **kwargs):
         try:
             obj = get_object_or_404(
-                Ticket,
+                VisitQueue,
                 pk=kwargs.get('id')
             )
-            serializer = TicketSerializer(obj)
+            serializer = VisitQueueSerializer(obj)
             return Response(
                 serializer.data,
                 status=status.HTTP_200_OK
@@ -225,14 +347,14 @@ class TicketViewSet(DefaultMixin, APIView):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
-                    Ticket,
+                    VisitQueue,
                     pk=kwargs.get('id')
                 )
                 data = dict(request.data)
                 for key, value in data.items():
                     setattr(obj, key, value)
                 obj.save()
-                serializer = TicketSerializer(obj)
+                serializer = VisitQueueSerializer(obj)
                 serializer.update(obj, data)
                 user = jwt.decode(
                             request.auth,
@@ -240,7 +362,7 @@ class TicketViewSet(DefaultMixin, APIView):
                         )
                 log = LogSerializer(data = {
                     'user_id': user.get('user_id'),
-                    'table': 'iticket_ticket',
+                    'table': 'visit_queue_visitqueue',
                     'primary_key': serializer.data.get('id'),
                     'data': serializer.data,
                     'type': 1
@@ -262,7 +384,7 @@ class TicketViewSet(DefaultMixin, APIView):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(
-                    Ticket,
+                    VisitQueue,
                     pk=kwargs.get('id')
                 )
                 obj.delete()
@@ -272,397 +394,7 @@ class TicketViewSet(DefaultMixin, APIView):
                         )
                 log = LogSerializer(data = {
                     'user_id': user.get('user_id'),
-                    'table': 'iticket_ticket',
-                    'primary_key': kwargs.get('id'),
-                    'data': {},
-                    'type': 2
-                })
-                log.save() if log.is_valid() else None
-                return Response(
-                    {
-                        'detail': f'Ticket deleted'
-                    },
-                    status=status.HTTP_200_OK
-                )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-class TicketEquipmentList(DefaultMixin, ListAPIView):
-    queryset = TicketEquipment.objects.all().order_by('updated_at')
-    serializer_class = TicketEquipmentSerializer
-    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
-    filterset_fields = [
-        'equipment',
-        'ticket'
-    ]
-
-
-    def post(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                if request.data:
-                    serializer = TicketEquipmentSerializer(data=dict(request.data))
-                    if serializer.is_valid():
-                        serializer.save()
-                        user = jwt.decode(
-                            request.auth,
-                            SECRET_KEY
-                        )
-                        log = LogSerializer(data = {
-                            'user_id': user.get('user_id'),
-                            'table': 'iticket_ticketequipment',
-                            'primary_key': serializer.data.get('id'),
-                            'data': serializer.data,
-                            'type': 0
-                        })
-                        log.save() if log.is_valid() else None
-                        return Response(serializer.data, status=status.HTTP_201_CREATED)
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-class TicketEquipmentViewSet(DefaultMixin, APIView):
-    def get(self, request, *args, **kwargs):
-        try:
-            obj = get_object_or_404(
-                TicketEquipment,
-                pk=kwargs.get('id')
-            )
-            serializer = TicketEquipmentSerializer(obj)
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-    def put(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                obj = get_object_or_404(
-                    TicketEquipment,
-                    pk=kwargs.get('id')
-                )
-                data = dict(request.data)
-                for key, value in data.items():
-                    setattr(obj, key, value)
-                obj.save()
-                serializer = TicketEquipmentSerializer(obj)
-                serializer.update(obj, data)
-                user = jwt.decode(
-                            request.auth,
-                            SECRET_KEY
-                        )
-                log = LogSerializer(data = {
-                    'user_id': user.get('user_id'),
-                    'table': 'iticket_ticketequipment',
-                    'primary_key': serializer.data.get('id'),
-                    'data': serializer.data,
-                    'type': 1
-                })
-                log.save() if log.is_valid() else None
-                return Response(
-                        serializer.data,
-                        status=status.HTTP_200_OK
-                    )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        
-    def delete(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                obj = get_object_or_404(
-                    TicketEquipment,
-                    pk=kwargs.get('id')
-                )
-                obj.delete()
-                user = jwt.decode(
-                            request.auth,
-                            SECRET_KEY
-                        )
-                log = LogSerializer(data = {
-                    'user_id': user.get('user_id'),
-                    'table': 'iticket_ticketequipment',
-                    'primary_key': kwargs.get('id'),
-                    'data': {},
-                    'type': 2
-                })
-                log.save() if log.is_valid() else None
-                return Response(
-                    {
-                        'detail': f'TicketEquipment deleted'
-                    },
-                    status=status.HTTP_200_OK
-                )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-class TicketTrackingList(DefaultMixin, ListAPIView):
-    queryset = TicketTracking.objects.all().order_by('updated_at')
-    serializer_class = TicketTrackingSerializer
-    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
-    filterset_fields = [
-        'ticket',
-        'user_id',
-        'status'
-    ]
-
-
-    def post(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                if request.data:
-                    serializer = TicketTrackingSerializer(data=dict(request.data))
-                    if serializer.is_valid():
-                        serializer.save()
-                        user = jwt.decode(
-                            request.auth,
-                            SECRET_KEY
-                        )
-                        log = LogSerializer(data = {
-                            'user_id': user.get('user_id'),
-                            'table': 'iticket_tickettracking',
-                            'primary_key': serializer.data.get('id'),
-                            'data': serializer.data,
-                            'type': 0
-                        })
-                        log.save() if log.is_valid() else None
-                        return Response(serializer.data, status=status.HTTP_201_CREATED)
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-class TicketTrackingViewSet(DefaultMixin, APIView):
-    def get(self, request, *args, **kwargs):
-        try:
-            obj = get_object_or_404(
-                TicketTracking,
-                pk=kwargs.get('id')
-            )
-            serializer = TicketTrackingSerializer(obj)
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-    def put(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                obj = get_object_or_404(
-                    TicketTracking,
-                    pk=kwargs.get('id')
-                )
-                data = dict(request.data)
-                for key, value in data.items():
-                    setattr(obj, key, value)
-                obj.save()
-                serializer = TicketTrackingSerializer(obj)
-                serializer.update(obj, data)
-                user = jwt.decode(
-                            request.auth,
-                            SECRET_KEY
-                        )
-                log = LogSerializer(data = {
-                    'user_id': user.get('user_id'),
-                    'table': 'iticket_tickettracking',
-                    'primary_key': serializer.data.get('id'),
-                    'data': serializer.data,
-                    'type': 1
-                })
-                log.save() if log.is_valid() else None
-                return Response(
-                        serializer.data,
-                        status=status.HTTP_200_OK
-                    )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        
-    def delete(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                obj = get_object_or_404(
-                    TicketTracking,
-                    pk=kwargs.get('id')
-                )
-                obj.delete()
-                user = jwt.decode(
-                            request.auth,
-                            SECRET_KEY
-                        )
-                log = LogSerializer(data = {
-                    'user_id': user.get('user_id'),
-                    'table': 'iticket_tickettracking',
-                    'primary_key': kwargs.get('id'),
-                    'data': {},
-                    'type': 2
-                })
-                log.save() if log.is_valid() else None
-                return Response(
-                    {
-                        'detail': f'Ticket Tracking deleted'
-                    },
-                    status=status.HTTP_200_OK
-                )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-class TicketTrackingFileList(DefaultMixin, ListAPIView):
-    queryset = TicketTrackingFile.objects.all().order_by('updated_at')
-    serializer_class = TicketTrackingFileSerializer
-    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
-    filterset_fields = [
-        'ticket_tracking'
-    ]
-
-
-    def post(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                if request.data:
-                    serializer = TicketTrackingFileSerializer(data=dict(request.data))
-                    if serializer.is_valid():
-                        serializer.save()
-                        user = jwt.decode(
-                            request.auth,
-                            SECRET_KEY
-                        )
-                        log = LogSerializer(data = {
-                            'user_id': user.get('user_id'),
-                            'table': 'iticket_tickettrackingfile',
-                            'primary_key': serializer.data.get('id'),
-                            'data': serializer.data,
-                            'type': 0
-                        })
-                        log.save() if log.is_valid() else None
-                        return Response(serializer.data, status=status.HTTP_201_CREATED)
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-class TicketTrackingFileViewSet(DefaultMixin, APIView):
-    def get(self, request, *args, **kwargs):
-        try:
-            obj = get_object_or_404(
-                TicketTrackingFile,
-                pk=kwargs.get('id')
-            )
-            serializer = TicketTrackingFileSerializer(obj)
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-    def put(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                obj = get_object_or_404(
-                    TicketTrackingFile,
-                    pk=kwargs.get('id')
-                )
-                data = dict(request.data)
-                for key, value in data.items():
-                    setattr(obj, key, value)
-                obj.save()
-                serializer = TicketTrackingFileSerializer(obj)
-                serializer.update(obj, data)
-                user = jwt.decode(
-                            request.auth,
-                            SECRET_KEY
-                        )
-                log = LogSerializer(data = {
-                    'user_id': user.get('user_id'),
-                    'table': 'iticket_tickettrackingfile',
-                    'primary_key': serializer.data.get('id'),
-                    'data': serializer.data,
-                    'type': 1
-                })
-                log.save() if log.is_valid() else None
-                return Response(
-                        serializer.data,
-                        status=status.HTTP_200_OK
-                    )
-        except Exception as e:
-            return Response(
-                {
-                    "error": str(e)
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-        
-    def delete(self, request, *args, **kwargs):
-        try:
-            with transaction.atomic():
-                obj = get_object_or_404(
-                    TicketTrackingFile,
-                    pk=kwargs.get('id')
-                )
-                obj.delete()
-                user = jwt.decode(
-                            request.auth,
-                            SECRET_KEY
-                        )
-                log = LogSerializer(data = {
-                    'user_id': user.get('user_id'),
-                    'table': 'iticket_tickettrackingfile',
+                    'table': 'visit_queue_visitqueue',
                     'primary_key': kwargs.get('id'),
                     'data': {},
                     'type': 1
@@ -670,7 +402,7 @@ class TicketTrackingFileViewSet(DefaultMixin, APIView):
                 log.save() if log.is_valid() else None
                 return Response(
                     {
-                        'detail': f'Ticket Tracking File deleted'
+                        'detail': f'Visit queue deleted'
                     },
                     status=status.HTTP_200_OK
                 )

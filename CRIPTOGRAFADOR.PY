@@ -1,6 +1,10 @@
 from utils import Crypt, Setting
 
 """
+GERAR SECRET_KEY:
+from cryptography.fernet import Fernet
+print(Fernet.generate_key().decode())
+
 LISTA DE ENGINES
 
     django.db.backends.postgresql (recomendado)
@@ -8,6 +12,7 @@ LISTA DE ENGINES
     django.db.backends.sqlite3
     django.db.backends.oracle
 """
+
 
 crypt = Crypt()
 database_engine = crypt.encrypt(input("Digite a engine do banco de dados: "))
@@ -32,7 +37,7 @@ print(dados_formatado)
 try:
     deseja_salvar = input("Deseja salvar os dados? (Digite 'sim' para salvar): ")
     if deseja_salvar.upper() == "SIM":
-        name = input("Qual vai ser o nome do arquivo ?(preencha .env caso queria substituir o arquivo) ")
+        name = input("Qual vai ser o nome do arquivo ?(preencha .env caso queria substituir o arquivo): ")
         with open(name, 'w+') as file:
             file.write(dados_formatado)
 except TypeError as e:

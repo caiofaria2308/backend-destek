@@ -1,0 +1,98 @@
+[
+    {
+        "model": "settings.equipment",
+        "pk": "0dd76151-88f7-44c6-90bb-59f9d1d6975a",
+        "fields": {
+            "created_at": "2021-11-06T17:04:24.132Z",
+            "updated_at": "2021-11-06T17:04:24.132Z",
+            "brand": "DIMEP",
+            "model": "D-Sat 2.0",
+            "type": "357e313c-6293-4527-8f06-d9b34be44bdf",
+            "is_active": true
+        }
+    },
+    {
+        "model": "settings.equipment",
+        "pk": "66001286-0fb4-4258-8643-087db7baea43",
+        "fields": {
+            "created_at": "2021-11-06T17:03:40.868Z",
+            "updated_at": "2021-11-06T17:03:40.868Z",
+            "brand": "ELGIN",
+            "model": "Smart S@t",
+            "type": "357e313c-6293-4527-8f06-d9b34be44bdf",
+            "is_active": true
+        }
+    },
+    {
+        "model": "settings.equipment",
+        "pk": "7dada7c5-62d7-48fb-9a8e-f659bf06d9a7",
+        "fields": {
+            "created_at": "2021-11-06T17:02:58.571Z",
+            "updated_at": "2021-11-06T17:02:58.571Z",
+            "brand": "EPSON",
+            "model": "TM-T20X",
+            "type": "2a2765b7-e4b7-4cdc-ae59-2d009be79267",
+            "is_active": true
+        }
+    },
+    {
+        "model": "settings.equipment",
+        "pk": "8df47714-e19b-47d4-b833-6a6e71957159",
+        "fields": {
+            "created_at": "2021-11-06T17:02:55.562Z",
+            "updated_at": "2021-11-06T17:02:55.562Z",
+            "brand": "EPSON",
+            "model": "TM-T20",
+            "type": "2a2765b7-e4b7-4cdc-ae59-2d009be79267",
+            "is_active": true
+        }
+    },
+    {
+        "model": "settings.equipment",
+        "pk": "96ddfed9-35fd-4ea1-b9e8-6d42624fb753",
+        "fields": {
+            "created_at": "2021-11-06T17:03:50.769Z",
+            "updated_at": "2021-11-06T17:03:50.769Z",
+            "brand": "ELGIN",
+            "model": "Linker II",
+            "type": "357e313c-6293-4527-8f06-d9b34be44bdf",
+            "is_active": true
+        }
+    },
+    {
+        "model": "settings.equipment",
+        "pk": "bc7c1aa0-9982-4ab2-b3cb-bae59d6d5734",
+        "fields": {
+            "created_at": "2021-11-06T17:04:46.047Z",
+            "updated_at": "2021-11-06T17:04:46.047Z",
+            "brand": "TANCA",
+            "model": "TS2000",
+            "type": "357e313c-6293-4527-8f06-d9b34be44bdf",
+            "is_active": true
+        }
+    },
+    {
+        "model": "settings.equipment",
+        "pk": "c2e20f18-1474-48a6-977b-dadd942e45b6",
+        "fields": {
+            "created_at": "2021-11-06T17:03:20.462Z",
+            "updated_at": "2021-11-06T17:03:20.462Z",
+            "brand": "BEMATECH",
+            "model": "MP4200TH",
+            "type": "2a2765b7-e4b7-4cdc-ae59-2d009be79267",
+            "is_active": true
+        }
+    },
+    {
+        "model": "settings.equipment",
+        "pk": "d9196a03-2b65-4811-9b5f-572594cf428a",
+        "fields": {
+            "created_at": "2021-11-06T17:03:48.029Z",
+            "updated_at": "2021-11-06T17:03:48.029Z",
+            "brand": "ELGIN",
+            "model": "Linker",
+            "type": "357e313c-6293-4527-8f06-d9b34be44bdf",
+            "is_active": true
+        }
+    }
+]
