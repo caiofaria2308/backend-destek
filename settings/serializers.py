@@ -6,6 +6,7 @@ from .models import (
     User as UserModel
 )
 
+
 class SettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = SettingModel
@@ -18,14 +19,16 @@ class UserSerializer(serializers.ModelSerializer):
         fields = "__all__"
     
 
-class EquipmentSerializer(serializers.ModelSerializer):
-    type = serializers.PrimaryKeyRelatedField(read_only=True)
-    class Meta:
-        model = EquipmentModel
-        fields = "__all__"
-
-
 class EquipmentTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = EquipmentTypeModel
+        fields = "__all__"
+
+
+
+class EquipmentSerializer(serializers.ModelSerializer):
+    type = serializers.PrimaryKeyRelatedField(read_only=True)
+    type_data = EquipmentTypeSerializer(read_only=True)
+    class Meta:
+        model = EquipmentModel
         fields = "__all__"
