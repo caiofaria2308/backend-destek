@@ -5,9 +5,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, ListCreateAPIView
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
+from rest_framework import filters
 from defaults import DefaultMixin
 from rest_framework.generics import get_object_or_404
+from destek.settings import SECRET_KEY
+from log.serializers import LogSerializer
+import jwt
+
 
 from .serializers import (
     SettingSerializer,
@@ -37,6 +41,18 @@ class SettingList(DefaultMixin, ListAPIView):
                     serializer = SettingSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'settings_setting',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -71,6 +87,18 @@ class SettingViewSet(DefaultMixin, APIView):
                 obj.save()
                 serializer = SettingSerializer(obj)
                 serializer.update(obj, data)
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'settings_setting',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         except Exception as e:
             return Response(
@@ -80,11 +108,23 @@ class SettingViewSet(DefaultMixin, APIView):
             )
 
 
-    def delete(self, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(Setting, pk=kwargs.get('id'))
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'settings_setting',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {
                         'detail': f'Setting deleted'
@@ -122,6 +162,18 @@ class UserList(DefaultMixin, ListAPIView):
                     serializer = UserSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'settings_user',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -162,6 +214,18 @@ class EquipmentList(DefaultMixin, ListAPIView):
                     serializer = EquipmentSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'settings_equipment',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -196,6 +260,18 @@ class EquipmentViewSet(DefaultMixin, APIView):
                 obj.save()
                 serializer = EquipmentSerializer(obj)
                 serializer.update(obj, data)
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'settings_equipment',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         except Exception as e:
             return Response(
@@ -205,11 +281,23 @@ class EquipmentViewSet(DefaultMixin, APIView):
             )
 
 
-    def delete(self, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(Equipment, pk=kwargs.get('id'))
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'settings_equipment',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 2
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {
                         'detail': f'Equipment deleted'
@@ -238,6 +326,18 @@ class EquipmentTypeList(DefaultMixin, ListAPIView):
                     serializer = EquipmentTypeSerializer(data=dict(request.data))
                     if serializer.is_valid():
                         serializer.save()
+                        user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                        log = LogSerializer(data = {
+                            'user_id': user.get('user_id'),
+                            'table': 'settings_equipmentlist',
+                            'primary_key': kwargs.get('id'),
+                            'data': serializer.data,
+                            'type': 0
+                        })
+                        log.save() if log.is_valid() else None
                         return Response(serializer.data, status=status.HTTP_201_CREATED)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -272,6 +372,18 @@ class EquipmentTypeViewSet(DefaultMixin, APIView):
                 obj.save()
                 serializer = EquipmentTypeSerializer(obj)
                 serializer.update(obj, data)
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'settings_equipmenttype',
+                    'primary_key': kwargs.get('id'),
+                    'data': serializer.data,
+                    'type': 1
+                })
+                log.save() if log.is_valid() else None
                 return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
         except Exception as e:
             return Response(
@@ -281,11 +393,23 @@ class EquipmentTypeViewSet(DefaultMixin, APIView):
             )
 
 
-    def delete(self, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
         try:
             with transaction.atomic():
                 obj = get_object_or_404(EquipmentType, pk=kwargs.get('id'))
                 obj.delete()
+                user = jwt.decode(
+                            request.auth,
+                            SECRET_KEY
+                        )
+                log = LogSerializer(data = {
+                    'user_id': user.get('user_id'),
+                    'table': 'settings_equipmenttype',
+                    'primary_key': kwargs.get('id'),
+                    'data': {},
+                    'type': 2
+                })
+                log.save() if log.is_valid() else None
                 return Response(
                     {
                         'detail': f'EquipmentType deleted'

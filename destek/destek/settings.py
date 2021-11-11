@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'settings',
     'client',
+    'iticket',
+    'log'
 ]
 
 MIDDLEWARE = [
